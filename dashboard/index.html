@@ -1208,11 +1208,53 @@
                     data.push(runningTotal);
                 });
             } else {
-                sortedSessions.forEach((s) => {
-                    runningTotal += s.net;
-                    labels.push(formatDate(s.date));
-                    data.push(runningTotal);
-                });
+                // "By Date" mode: show all calendar dates, not just play days
+                if (sortedSessions.length > 0) {
+                    // Group sessions by date string for lookup
+                    const sessionsByDate = {};
+                    sortedSessions.forEach(s => {
+                        const dateKey = s.date.toISOString().split('T')[0];
+                        if (!sessionsByDate[dateKey]) {
+                            sessionsByDate[dateKey] = [];
+                        }
+                        sessionsByDate[dateKey].push(s);
+                    });
+
+                    // Get date range from filters or sessions
+                    const dateFromInput = document.getElementById('dateFrom').value;
+                    const dateToInput = document.getElementById('dateTo').value;
+                    
+                    let startDate, endDate;
+                    if (dateFromInput) {
+                        startDate = new Date(dateFromInput + 'T00:00:00');
+                    } else {
+                        startDate = new Date(sortedSessions[0].date);
+                    }
+                    if (dateToInput) {
+                        endDate = new Date(dateToInput + 'T00:00:00');
+                    } else {
+                        endDate = new Date(sortedSessions[sortedSessions.length - 1].date);
+                    }
+
+                    // Iterate through every day in the range
+                    const currentDate = new Date(startDate);
+                    while (currentDate <= endDate) {
+                        const dateKey = currentDate.toISOString().split('T')[0];
+                        
+                        // Add any sessions that occurred on this day
+                        if (sessionsByDate[dateKey]) {
+                            sessionsByDate[dateKey].forEach(s => {
+                                runningTotal += s.net;
+                            });
+                        }
+                        
+                        labels.push(formatDate(new Date(currentDate)));
+                        data.push(runningTotal);
+                        
+                        // Move to next day
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+                }
             }
 
             if (chartInstance) {
