@@ -931,9 +931,34 @@
 
         // Configuration
         const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQdTYfCf8JdPJ1HE5DtSDU1I871jNy52tkO87rf_eeW6KwF5ThDYtSjp5N9uAy3ChXvgQ9vXmfcX_FZ/pub?output=csv';
-        const CORS_PROXY = 'https://corsproxy.io/?';
-        // Add timestamp to bust cache and always get fresh data
-        const SHEET_URL = CORS_PROXY + encodeURIComponent(SHEET_CSV_URL + '&_t=' + Date.now());
+
+        // Multiple CORS proxies for fallback reliability
+        const CORS_PROXIES = [
+            { url: 'https://api.allorigins.win/raw?url=', encode: true },
+            { url: 'https://corsproxy.io/?', encode: true },
+            { url: 'https://api.codetabs.com/v1/proxy?quest=', encode: true }
+        ];
+
+        // Fetch with fallback through multiple proxies
+        async function fetchWithFallback(targetUrl) {
+            const urlWithCacheBust = targetUrl + '&_t=' + Date.now();
+            const errors = [];
+
+            for (const proxy of CORS_PROXIES) {
+                const proxyUrl = proxy.url + (proxy.encode ? encodeURIComponent(urlWithCacheBust) : urlWithCacheBust);
+                try {
+                    const response = await fetch(proxyUrl);
+                    if (response.ok) {
+                        return await response.text();
+                    }
+                    errors.push(`${proxy.url}: HTTP ${response.status}`);
+                } catch (err) {
+                    errors.push(`${proxy.url}: ${err.message}`);
+                }
+            }
+
+            throw new Error('All proxies failed: ' + errors.join('; '));
+        }
         const ROWS_PER_PAGE = 25;
 
         // State
@@ -1690,10 +1715,7 @@
         // Initialize
         async function init() {
             try {
-                const response = await fetch(SHEET_URL);
-                if (!response.ok) throw new Error('Failed to fetch data');
-                
-                const csv = await response.text();
+                const csv = await fetchWithFallback(SHEET_CSV_URL);
                 allSessions = parseCSV(csv);
 
                 if (allSessions.length === 0) {
