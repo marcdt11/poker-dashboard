@@ -164,6 +164,134 @@
             box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
         }
 
+        /* Multiselect dropdown */
+        .multiselect {
+            position: relative;
+        }
+
+        .multiselect-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 32px 10px 12px;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+        }
+
+        .multiselect-toggle::after {
+            content: '';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 4px solid transparent;
+            border-top: 5px solid var(--text-secondary);
+        }
+
+        .multiselect.open .multiselect-toggle::after {
+            border-top: none;
+            border-bottom: 5px solid var(--text-secondary);
+        }
+
+        .multiselect-toggle:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .multiselect.open .multiselect-toggle {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+        }
+
+        .multiselect-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .multiselect.open .multiselect-dropdown {
+            display: block;
+        }
+
+        .multiselect-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            transition: background 0.15s;
+        }
+
+        .multiselect-option:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .multiselect-option input[type="checkbox"] {
+            accent-color: var(--accent-blue);
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+
+        .multiselect-controls {
+            display: flex;
+            gap: 4px;
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .multiselect-controls button {
+            flex: 1;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .multiselect-controls button:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--accent-blue);
+        }
+
+        .multiselect-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-blue);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 1px 6px;
+            margin-left: 4px;
+            min-width: 18px;
+        }
+
         .filter-actions {
             display: flex;
             align-items: flex-end;
@@ -759,28 +887,32 @@
                         <input type="date" id="dateTo">
                     </div>
                     <div class="filter-group">
-                        <label for="typeFilter">Type</label>
-                        <select id="typeFilter">
-                            <option value="all">All Types</option>
-                        </select>
+                        <label>Type</label>
+                        <div class="multiselect" id="typeFilter" data-placeholder="All Types">
+                            <button type="button" class="multiselect-toggle">All Types</button>
+                            <div class="multiselect-dropdown"></div>
+                        </div>
                     </div>
                     <div class="filter-group">
-                        <label for="subtypeFilter">Sub-type</label>
-                        <select id="subtypeFilter">
-                            <option value="all">All Sub-types</option>
-                        </select>
+                        <label>Sub-type</label>
+                        <div class="multiselect" id="subtypeFilter" data-placeholder="All Sub-types">
+                            <button type="button" class="multiselect-toggle">All Sub-types</button>
+                            <div class="multiselect-dropdown"></div>
+                        </div>
                     </div>
                     <div class="filter-group">
-                        <label for="gameFilter">Game</label>
-                        <select id="gameFilter">
-                            <option value="all">All Games</option>
-                        </select>
+                        <label>Game</label>
+                        <div class="multiselect" id="gameFilter" data-placeholder="All Games">
+                            <button type="button" class="multiselect-toggle">All Games</button>
+                            <div class="multiselect-dropdown"></div>
+                        </div>
                     </div>
                     <div class="filter-group">
-                        <label for="liveOnlineFilter">Online/Live</label>
-                        <select id="liveOnlineFilter">
-                            <option value="all">All</option>
-                        </select>
+                        <label>Online/Live</label>
+                        <div class="multiselect" id="liveOnlineFilter" data-placeholder="All">
+                            <button type="button" class="multiselect-toggle">All</button>
+                            <div class="multiselect-dropdown"></div>
+                        </div>
                     </div>
                     <div class="filter-group filter-actions">
                         <button class="btn-reset" id="resetFilters">Reset Filters</button>
@@ -1079,6 +1211,96 @@
             return sessions;
         }
 
+        // Multiselect helpers
+        function buildMultiselect(containerId, values) {
+            const container = document.getElementById(containerId);
+            const dropdown = container.querySelector('.multiselect-dropdown');
+            dropdown.innerHTML = '';
+
+            // Select All / Select None controls
+            const controls = document.createElement('div');
+            controls.className = 'multiselect-controls';
+            const selectAll = document.createElement('button');
+            selectAll.type = 'button';
+            selectAll.textContent = 'Select All';
+            selectAll.addEventListener('click', () => {
+                container.querySelectorAll('.multiselect-dropdown input[type="checkbox"]').forEach(cb => cb.checked = true);
+                updateMultiselectLabel(containerId);
+                applyFilters();
+            });
+            const selectNone = document.createElement('button');
+            selectNone.type = 'button';
+            selectNone.textContent = 'Select None';
+            selectNone.addEventListener('click', () => {
+                container.querySelectorAll('.multiselect-dropdown input[type="checkbox"]').forEach(cb => cb.checked = false);
+                updateMultiselectLabel(containerId);
+                applyFilters();
+            });
+            controls.appendChild(selectAll);
+            controls.appendChild(selectNone);
+            dropdown.appendChild(controls);
+
+            values.forEach(val => {
+                const label = document.createElement('label');
+                label.className = 'multiselect-option';
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.value = val;
+                cb.checked = true;
+                cb.addEventListener('change', () => {
+                    updateMultiselectLabel(containerId);
+                    applyFilters();
+                });
+                label.appendChild(cb);
+                label.appendChild(document.createTextNode(val));
+                dropdown.appendChild(label);
+            });
+            updateMultiselectLabel(containerId);
+        }
+
+        function getMultiselectValues(containerId) {
+            const container = document.getElementById(containerId);
+            const checkboxes = container.querySelectorAll('.multiselect-dropdown input[type="checkbox"]');
+            const checked = [];
+            let allChecked = true;
+            checkboxes.forEach(cb => {
+                if (cb.checked) checked.push(cb.value);
+                else allChecked = false;
+            });
+            return allChecked ? 'all' : checked;
+        }
+
+        function updateMultiselectLabel(containerId) {
+            const container = document.getElementById(containerId);
+            const toggle = container.querySelector('.multiselect-toggle');
+            const placeholder = container.dataset.placeholder;
+            const checkboxes = container.querySelectorAll('.multiselect-dropdown input[type="checkbox"]');
+            const checked = [];
+            checkboxes.forEach(cb => { if (cb.checked) checked.push(cb.value); });
+
+            if (checked.length === checkboxes.length) {
+                toggle.textContent = placeholder;
+            } else if (checked.length === 0) {
+                toggle.textContent = 'None selected';
+            } else if (checked.length === 1) {
+                toggle.textContent = checked[0];
+            } else {
+                toggle.textContent = checked[0] + ' ';
+                const badge = document.createElement('span');
+                badge.className = 'multiselect-badge';
+                badge.textContent = '+' + (checked.length - 1);
+                toggle.appendChild(badge);
+            }
+        }
+
+        function resetMultiselect(containerId) {
+            const container = document.getElementById(containerId);
+            container.querySelectorAll('.multiselect-dropdown input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+            });
+            updateMultiselectLabel(containerId);
+        }
+
         // Populate filter dropdowns
         function populateFilters() {
             const types = [...new Set(allSessions.map(s => s.type).filter(t => t))].sort();
@@ -1086,37 +1308,10 @@
             const games = [...new Set(allSessions.map(s => s.game).filter(t => t))].sort();
             const liveOnline = [...new Set(allSessions.map(s => s.liveOnline).filter(t => t))].sort();
 
-            const typeFilter = document.getElementById('typeFilter');
-            types.forEach(t => {
-                const option = document.createElement('option');
-                option.value = t;
-                option.textContent = t;
-                typeFilter.appendChild(option);
-            });
-
-            const subtypeFilter = document.getElementById('subtypeFilter');
-            subtypes.forEach(t => {
-                const option = document.createElement('option');
-                option.value = t;
-                option.textContent = t;
-                subtypeFilter.appendChild(option);
-            });
-
-            const gameFilter = document.getElementById('gameFilter');
-            games.forEach(g => {
-                const option = document.createElement('option');
-                option.value = g;
-                option.textContent = g;
-                gameFilter.appendChild(option);
-            });
-
-            const liveOnlineFilter = document.getElementById('liveOnlineFilter');
-            liveOnline.forEach(l => {
-                const option = document.createElement('option');
-                option.value = l;
-                option.textContent = l;
-                liveOnlineFilter.appendChild(option);
-            });
+            buildMultiselect('typeFilter', types);
+            buildMultiselect('subtypeFilter', subtypes);
+            buildMultiselect('gameFilter', games);
+            buildMultiselect('liveOnlineFilter', liveOnline);
 
             // Set date range to year-to-date by default
             if (allSessions.length > 0) {
@@ -1143,10 +1338,10 @@
         function applyFilters() {
             const dateFrom = parseDateInput(document.getElementById('dateFrom').value);
             const dateTo = parseDateInput(document.getElementById('dateTo').value);
-            const type = document.getElementById('typeFilter').value;
-            const subtype = document.getElementById('subtypeFilter').value;
-            const game = document.getElementById('gameFilter').value;
-            const liveOnline = document.getElementById('liveOnlineFilter').value;
+            const type = getMultiselectValues('typeFilter');
+            const subtype = getMultiselectValues('subtypeFilter');
+            const game = getMultiselectValues('gameFilter');
+            const liveOnline = getMultiselectValues('liveOnlineFilter');
 
             filteredSessions = allSessions.filter(s => {
                 if (dateFrom && s.date < dateFrom) return false;
@@ -1155,10 +1350,10 @@
                     endOfDay.setHours(23, 59, 59, 999);
                     if (s.date > endOfDay) return false;
                 }
-                if (type !== 'all' && s.type !== type) return false;
-                if (subtype !== 'all' && s.subtype !== subtype) return false;
-                if (game !== 'all' && s.game !== game) return false;
-                if (liveOnline !== 'all' && s.liveOnline !== liveOnline) return false;
+                if (type !== 'all' && !type.includes(s.type)) return false;
+                if (subtype !== 'all' && !subtype.includes(s.subtype)) return false;
+                if (game !== 'all' && !game.includes(s.game)) return false;
+                if (liveOnline !== 'all' && !liveOnline.includes(s.liveOnline)) return false;
                 return true;
             });
 
@@ -1567,9 +1762,28 @@
 
         // Event Listeners
         function setupEventListeners() {
-            // Filter changes
-            ['dateFrom', 'dateTo', 'typeFilter', 'subtypeFilter', 'gameFilter', 'liveOnlineFilter'].forEach(id => {
+            // Date filter changes
+            ['dateFrom', 'dateTo'].forEach(id => {
                 document.getElementById(id).addEventListener('change', applyFilters);
+            });
+
+            // Multiselect toggle open/close
+            document.querySelectorAll('.multiselect-toggle').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const ms = btn.closest('.multiselect');
+                    const wasOpen = ms.classList.contains('open');
+                    // Close all others
+                    document.querySelectorAll('.multiselect.open').forEach(el => el.classList.remove('open'));
+                    if (!wasOpen) ms.classList.add('open');
+                });
+            });
+
+            // Close multiselects when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.multiselect')) {
+                    document.querySelectorAll('.multiselect.open').forEach(el => el.classList.remove('open'));
+                }
             });
 
             // Reset filters - clears all filters to show all data
@@ -1580,10 +1794,10 @@
                     document.getElementById('dateFrom').value = formatDateForInput(dates[0]);
                     document.getElementById('dateTo').value = formatDateForInput(today);
                 }
-                document.getElementById('typeFilter').value = 'all';
-                document.getElementById('subtypeFilter').value = 'all';
-                document.getElementById('gameFilter').value = 'all';
-                document.getElementById('liveOnlineFilter').value = 'all';
+                resetMultiselect('typeFilter');
+                resetMultiselect('subtypeFilter');
+                resetMultiselect('gameFilter');
+                resetMultiselect('liveOnlineFilter');
                 clearActiveDateShortcut();
                 applyFilters();
             });
