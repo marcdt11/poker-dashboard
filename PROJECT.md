@@ -68,6 +68,7 @@ CSS custom properties matching PreflopTrainer's visual style:
 - Action buttons: red (raise/bet), green (call/check), gray (fold), 44px height, 10px radius
 - Pot pill: orange capsule, bet pills: white background with black text
 - Responsive table: horizontal stadium (2:1) on desktop, vertical stadium (0.7:1) on mobile
+- Mobile optimizations: `100dvh` viewport with `env(safe-area-inset-bottom)` for iOS Safari, 62px seats with 12px labels, balanced rank/suit font sizing, numeric keypad bet input (`inputmode="numeric"`), zoom prevention via `maximum-scale=1.0`
 - Fonts: Outfit (UI) + JetBrains Mono (numbers/data)
 - Loaded via Google Fonts CDN
 

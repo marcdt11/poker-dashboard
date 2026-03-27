@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>RTP Driller</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -47,7 +47,9 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
+            min-height: 100dvh;
             line-height: 1.5;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         /* ===== LAYOUT ===== */
@@ -56,6 +58,7 @@
             margin: 0 auto;
             padding: 16px;
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
         }
@@ -943,12 +946,15 @@
                 aspect-ratio: 0.7 / 1;
             }
             .seat {
-                width: 52px;
-                height: 52px;
+                width: 62px;
+                height: 62px;
             }
             .seat-position {
-                font-size: 10px;
+                font-size: 12px;
                 top: -15px;
+            }
+            .seat-stack {
+                font-size: 12px;
             }
             .seat-hero-label {
                 bottom: -20px;
@@ -974,14 +980,20 @@
                 height: 44px;
             }
             .card.board-card .rank {
-                font-size: 20px;
+                font-size: 18px;
             }
             .card.board-card .suit {
-                font-size: 20px;
+                font-size: 14px;
             }
             .card.board-card.facedown {
                 width: 32px;
                 height: 44px;
+            }
+            .card .rank {
+                font-size: 22px;
+            }
+            .card .suit {
+                font-size: 17px;
             }
             .seat-pos-0 .seat-bet-pill { top: -38px; }
             .seat-pos-4 .seat-bet-pill { bottom: -38px; }
@@ -1116,7 +1128,7 @@
                         <div class="opponent-action-display" id="oppActionDisplay" style="display:none;"></div>
                         <div class="action-buttons" id="actionButtons"></div>
                         <div class="sizing-area" id="sizingArea">
-                            <input type="number" class="sizing-input" id="sizingInput" placeholder="Bet size in $" min="0" step="1">
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" class="sizing-input" id="sizingInput" placeholder="Bet size in $">
                             <span class="sizing-unit">$</span>
                             <button class="sizing-confirm" id="sizingConfirm">Confirm</button>
                         </div>
