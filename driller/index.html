@@ -1290,7 +1290,7 @@
         'SRP_OOP': [
             { who: 'fold', seats: ['UTG', 'UTG1', 'MP', 'HJ'], dimmed: true },
             { who: 'hero', seat: 'CO', action: 'raises to', bb: 5 },
-            { who: 'villain', seat: 'BTN', action: 'calls', bb: 4 },
+            { who: 'villain', seat: 'BTN', action: 'calls', bb: 5 },
             { who: 'fold', seats: ['SB', 'BB'], dimmed: true }
         ],
         '3BP_IP': [
@@ -1705,6 +1705,9 @@
             return;
         }
 
+        // Pause before V acts so it feels like V is thinking
+        await delay(700);
+
         const heroIsIP = !isUserOOP();
 
         if (heroIsIP) {
@@ -1723,7 +1726,7 @@
                 if (roll < 1/3) {
                     action = 'checks';
                 } else if (roll < 2/3) {
-                    const betSize = roundToBBDollar(game.pot * (1/3));
+                    const betSize = ceilTo5Dollars(game.pot * (1/3));
                     amount = Math.min(betSize, game.oppStack);
                     if (amount >= game.oppStack) {
                         action = 'goes all in';
@@ -1732,7 +1735,7 @@
                         action = 'bets';
                     }
                 } else {
-                    const betSize = roundToBBDollar(game.pot * (2/3));
+                    const betSize = ceilTo5Dollars(game.pot * (2/3));
                     amount = Math.min(betSize, game.oppStack);
                     if (amount >= game.oppStack) {
                         action = 'goes all in';
@@ -1786,7 +1789,11 @@
             showSeatBet(villainSeat, amount);
             logAction('Opponent', 'bets', amount);
             game.streetActions.push({ actor: 'opp', action: 'bet', amount });
+            oppDisplay.textContent = `Opponent bets ${fmtDollar(amount)}`;
+            oppDisplay.style.display = 'block';
             renderHand();
+            await delay(700);
+            oppDisplay.style.display = 'none';
             promptUserAction({ type: 'bet', amount });
         } else if (action === 'raises to') {
             game.oppStack -= amount;
@@ -1794,7 +1801,11 @@
             showSeatBet(villainSeat, amount);
             logAction('Opponent', 'raises to', amount);
             game.streetActions.push({ actor: 'opp', action: 'raise', amount });
+            oppDisplay.textContent = `Opponent raises to ${fmtDollar(amount)}`;
+            oppDisplay.style.display = 'block';
             renderHand();
+            await delay(700);
+            oppDisplay.style.display = 'none';
             promptUserAction({ type: 'raise', amount });
         } else if (action === 'goes all in') {
             game.oppStack -= amount;
@@ -1802,7 +1813,11 @@
             showSeatBet(villainSeat, amount);
             logAction('Opponent', 'goes all in', amount);
             game.streetActions.push({ actor: 'opp', action: 'allin', amount });
+            oppDisplay.textContent = `Opponent goes all in ${fmtDollar(amount)}`;
+            oppDisplay.style.display = 'block';
             renderHand();
+            await delay(700);
+            oppDisplay.style.display = 'none';
             promptUserAction({ type: 'raise', amount });
         }
     }
@@ -1970,7 +1985,7 @@
 
     function bbToDollars(bb) {
         const stake = STAKES[config.stakes];
-        return Math.round(bb * stake.bb);
+        return Math.floor(bb * stake.bb);
     }
 
     function fmtDollar(bb) {
@@ -1980,8 +1995,16 @@
     // Round a BB amount so the dollar value is a whole number
     function roundToBBDollar(bb) {
         const stake = STAKES[config.stakes];
-        const dollars = Math.round(bb * stake.bb);
+        const dollars = Math.floor(bb * stake.bb);
         return dollars / stake.bb;
+    }
+
+    // Round up a BB amount so the dollar value is a multiple of $5
+    function ceilTo5Dollars(bb) {
+        const stake = STAKES[config.stakes];
+        const dollars = bb * stake.bb;
+        const rounded = Math.ceil(dollars / 5) * 5;
+        return rounded / stake.bb;
     }
 
     function renderTableSeats(activeTurn) {
@@ -2018,7 +2041,8 @@
             else if (isVillain) typeLabel = 'VILLAIN';
             else if (type === 'active-player') typeLabel = position;
 
-            const dealerBadge = position === 'BTN' ? '<span class="dealer-badge">D</span>' : '';
+            const hasBet = game.seatBets && game.seatBets[position];
+            const dealerBadge = position === 'BTN' && !hasBet ? '<span class="dealer-badge">D</span>' : '';
 
             // Active turn glow: by position name during preflop, by role during postflop
             let activeClass = '';
