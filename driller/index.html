@@ -184,17 +184,6 @@
             min-height: 0;
         }
 
-        .hand-sidebar {
-            width: 220px;
-            flex-shrink: 0;
-            background: var(--bg-secondary);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: var(--radius-lg);
-            padding: 12px;
-            overflow-y: auto;
-            font-size: 0.8rem;
-        }
-
         .hand-main {
             flex: 1;
             min-width: 0;
@@ -366,36 +355,6 @@
             padding-top: 16px;
         }
 
-        .sidebar-section {
-            margin-bottom: 12px;
-        }
-
-        .sidebar-section-title {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 6px;
-        }
-
-        @keyframes fadeSlideIn {
-            from { opacity: 0; transform: translateX(-8px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .sidebar-entry {
-            padding: 4px 0;
-            font-size: 0.78rem;
-            line-height: 1.4;
-            color: var(--text-secondary);
-            opacity: 0;
-            animation: fadeSlideIn 0.3s ease forwards;
-        }
-
-        .sidebar-entry.dimmed { opacity: 0.5 !important; }
-        .sidebar-entry.hero { color: var(--accent-blue); font-weight: 600; }
-        .sidebar-entry.villain { color: var(--accent-red); font-weight: 600; }
 
         .cards-row {
             display: flex;
@@ -972,11 +931,6 @@
             .hand-layout {
                 flex-direction: column;
             }
-            .hand-sidebar {
-                width: 100%;
-                max-height: 120px;
-                order: 2;
-            }
             .poker-table-wrapper {
                 padding: 40px 20px;
             }
@@ -1123,8 +1077,8 @@
             <div class="config-group">
                 <div class="config-label">Stakes</div>
                 <div class="config-options" id="stakesOptions">
-                    <button class="config-btn selected" data-value="3">$1/$3</button>
-                    <button class="config-btn" data-value="5">$2/$5</button>
+                    <button class="config-btn" data-value="3">$1/$3</button>
+                    <button class="config-btn selected" data-value="5">$2/$5</button>
                     <button class="config-btn" data-value="10">$5/$10</button>
                 </div>
             </div>
@@ -1136,7 +1090,6 @@
         <!-- HAND SCREEN -->
         <div class="screen" id="screenHand">
             <div class="hand-layout">
-                <div class="hand-sidebar" id="handSidebar"></div>
                 <div class="hand-main">
                     <div class="poker-table-wrapper">
                         <div class="table-felt">
@@ -1225,11 +1178,7 @@
     const STREETS = ['flop', 'turn', 'river'];
 
     // Opponent AI weights
-    const OPP_AI = {
-        actFirst:   { check: 0.70, bet: 0.30 },
-        facingBet:  { call: 0.80, raise: 0.20 },
-        facingRaise:{ call: 0.90, raise: 0.10 },
-    };
+    // Opponent logic is position-aware — see doOpponentAction()
 
     // Full table seat order (clockwise from BTN)
     const FULL_TABLE = ['BTN', 'SB', 'BB', 'UTG', 'UTG1', 'MP', 'HJ', 'CO'];
@@ -1255,13 +1204,13 @@
             villainSeat: 'BB'
         },
         'SRP_OOP': {
-            pot: 10.5,
-            narrative: 'Opponent opens to 5bb from MP. You call from BB.',
+            pot: 11.5,
+            narrative: 'You open to 5bb from CO. BTN calls.',
             userInvested: 5,
             oppInvested: 5,
-            positions: { user: 'BB (Caller)', opp: 'MP (Opener)' },
-            heroSeat: 'BB',
-            villainSeat: 'MP'
+            positions: { user: 'CO (Opener)', opp: 'BTN (Caller)' },
+            heroSeat: 'CO',
+            villainSeat: 'BTN'
         },
         '3BP_IP': {
             pot: 33.5,
@@ -1324,10 +1273,10 @@
             { who: 'villain', seat: 'BB', action: 'calls', bb: 4 }
         ],
         'SRP_OOP': [
-            { who: 'fold', seats: ['UTG', 'UTG1'], dimmed: true },
-            { who: 'villain', seat: 'MP', action: 'raises to', bb: 5 },
-            { who: 'fold', seats: ['HJ', 'CO', 'BTN', 'SB'], dimmed: true },
-            { who: 'hero', seat: 'BB', action: 'calls', bb: 4 }
+            { who: 'fold', seats: ['UTG', 'UTG1', 'MP', 'HJ'], dimmed: true },
+            { who: 'hero', seat: 'CO', action: 'raises to', bb: 5 },
+            { who: 'villain', seat: 'BTN', action: 'calls', bb: 4 },
+            { who: 'fold', seats: ['SB', 'BB'], dimmed: true }
         ],
         '3BP_IP': [
             { who: 'fold', seats: ['UTG', 'UTG1', 'MP', 'HJ'], dimmed: true },
@@ -1362,7 +1311,7 @@
     };
 
     // ===== STATE =====
-    let config = { position: 'IP', spot: 'SRP', stack: 200, stakes: 3 };
+    let config = { position: 'IP', spot: 'SRP', stack: 200, stakes: 5 };
     let game = null;
     let sessionLog = [];
     let handNumber = 0;
@@ -1635,7 +1584,6 @@
             allIn: false,
             pendingAction: null,
             renderedBoardCount: 0,
-            sidebarAnimated: false,
             preflopAnimating: true,
             seatStates: {},
             seatBets: {},
@@ -1680,51 +1628,46 @@
             return;
         }
 
-        if (facingBet === null) {
-            // Opponent acts first (user is IP)
-            const roll = Math.random();
-            if (roll < OPP_AI.actFirst.check) {
+        const heroIsIP = !isUserOOP();
+
+        if (heroIsIP) {
+            // Hero is IP → V acts first, always checks; always calls any bet/raise
+            if (facingBet === null) {
                 action = 'checks';
             } else {
-                const betSize = roundToBBDollar(game.pot * 0.5);
-                amount = Math.min(betSize, game.oppStack);
-                if (amount >= game.oppStack) {
-                    action = 'goes all in';
-                    amount = game.oppStack;
-                } else {
-                    action = 'bets';
-                }
-            }
-        } else if (facingBet.type === 'raise') {
-            const roll = Math.random();
-            if (roll < OPP_AI.facingRaise.call) {
                 action = 'calls';
                 amount = Math.min(facingBet.amount, game.oppStack);
-            } else {
-                const raiseSize = Math.min(roundToBBDollar(facingBet.amount * 3), game.oppStack);
-                if (raiseSize >= game.oppStack) {
-                    action = 'goes all in';
-                    amount = game.oppStack;
-                } else {
-                    action = 'raises to';
-                    amount = raiseSize;
-                }
             }
         } else {
-            // Facing a bet
-            const roll = Math.random();
-            if (roll < OPP_AI.facingBet.call) {
+            // Hero is OOP
+            if (facingBet === null) {
+                // Hero checked → V checks 33%, bets 1/3 pot 33%, bets 2/3 pot 33%
+                const roll = Math.random();
+                if (roll < 1/3) {
+                    action = 'checks';
+                } else if (roll < 2/3) {
+                    const betSize = roundToBBDollar(game.pot * (1/3));
+                    amount = Math.min(betSize, game.oppStack);
+                    if (amount >= game.oppStack) {
+                        action = 'goes all in';
+                        amount = game.oppStack;
+                    } else {
+                        action = 'bets';
+                    }
+                } else {
+                    const betSize = roundToBBDollar(game.pot * (2/3));
+                    amount = Math.min(betSize, game.oppStack);
+                    if (amount >= game.oppStack) {
+                        action = 'goes all in';
+                        amount = game.oppStack;
+                    } else {
+                        action = 'bets';
+                    }
+                }
+            } else {
+                // Hero bet or raised → V always calls
                 action = 'calls';
                 amount = Math.min(facingBet.amount, game.oppStack);
-            } else {
-                const raiseSize = Math.min(roundToBBDollar(facingBet.amount * 3), game.oppStack);
-                if (raiseSize >= game.oppStack) {
-                    action = 'goes all in';
-                    amount = game.oppStack;
-                } else {
-                    action = 'raises to';
-                    amount = raiseSize;
-                }
             }
         }
 
@@ -2047,55 +1990,6 @@
 
     }
 
-    function renderSidebar() {
-        const spotKey = game.spotKey;
-        const steps = PREFLOP_STEPS[spotKey];
-        const stake = STAKES[config.stakes];
-        const animate = !game.sidebarAnimated;
-        let entryIndex = 0;
-
-        let html = '<div class="sidebar-section"><div class="sidebar-section-title">PRE-FLOP</div>';
-
-        for (const step of steps) {
-            const delay = animate ? ` style="animation-delay: ${entryIndex * 100}ms"` : ' style="opacity:1"';
-            if (step.dimmed && step.seats) {
-                const seatsStr = step.seats.join(', ');
-                html += `<div class="sidebar-entry dimmed"${delay}>${seatsStr} fold</div>`;
-            } else if (step.who === 'hero') {
-                const amt = step.bb ? bbToDollars(step.bb) : '';
-                const amtStr = amt ? ` $${amt}` : '';
-                html += `<div class="sidebar-entry hero"${delay}>Hero (${step.seat}) ${step.action}${amtStr}</div>`;
-            } else if (step.who === 'villain') {
-                const amt = step.bb ? bbToDollars(step.bb) : '';
-                const amtStr = amt ? ` $${amt}` : '';
-                html += `<div class="sidebar-entry villain"${delay}>Villain (${step.seat}) ${step.action}${amtStr}</div>`;
-            }
-            entryIndex++;
-        }
-
-        html += '</div>';
-
-        // Post-flop section
-        html += '<div class="sidebar-section"><div class="sidebar-section-title">' + getCurrentStreet().toUpperCase() + '</div>';
-        if (game.board.length > 0) {
-            const boardStr = game.board.map(c => c.rank + SUIT_SYMBOLS[c.suit]).join(' ');
-            html += `<div class="sidebar-entry dimmed" style="margin-bottom:6px;opacity:1">Board: ${boardStr}</div>`;
-        }
-        for (const a of game.actions) {
-            if (a.street === 'flop' || a.street === 'turn' || a.street === 'river') {
-                const isUser = a.actor === 'You';
-                const cls = isUser ? 'hero' : 'villain';
-                const actor = isUser ? 'Hero' : 'Villain';
-                const amountStr = a.amount > 0 ? ' ' + fmtDollar(a.amount) : '';
-                html += `<div class="sidebar-entry ${cls}" style="opacity:1">${actor} ${a.action}${amountStr}</div>`;
-            }
-        }
-        html += '</div>';
-
-        document.getElementById('handSidebar').innerHTML = html;
-        game.sidebarAnimated = true;
-    }
-
     function renderHand() {
         renderTableSeats();
         positionSeatsOnStadium();
@@ -2128,7 +2022,6 @@
             game.heroCardsRendered = true;
         }
 
-        renderSidebar();
     }
 
     function renderActionButtons(facingBet) {

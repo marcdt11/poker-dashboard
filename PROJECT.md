@@ -75,19 +75,20 @@ CSS custom properties matching PreflopTrainer's visual style:
 - **Deck Engine** — Fisher-Yates shuffle, deal with burn cards, no duplicates
 - **Game State Machine** — street progression (flop→turn→river→showdown), pot/stack tracking, action log
 - **Preflop Spot Definitions** — 7 preflop configs with fixed pot sizes, positions, and narratives
-- **Opponent AI** — weighted random (never folds, ~70% check/call, ~30% bet/raise, fixed 1/2 pot sizing)
+- **Opponent Logic** — position-aware: when H is IP, V always checks then calls; when H is OOP and checks, V checks/bets 1/3 pot/bets 2/3 pot (equal 33% weight); when H is OOP and bets, V always calls
 - **Config UI** — stack depth, spot type, position, stakes with mutual exclusion rules
 - **Table UI** — 8-max stadium-shaped felt (responsive: vertical on mobile, horizontal on desktop) with positioned seats, hero hand below table, white glow active-turn indicators, status-colored seat borders
 - **Preflop Animation Sequencer** — async step-by-step preflop replay: posts blinds (~150ms), walks each PREFLOP_STEPS entry with timed delays (~300ms/action), folds seats with card-slide-away, shows bet pills, then collects into pot pill before dealing flop; seats update border colors based on action status (raised/called/posted)
 - **Chip Pills** — bet/raise/call amounts shown as white capsule pills at each seat position; collected into center orange pot pill on street completion; used in both preflop animation and postflop play
 - **Animations** — 0.25s easeInOut seat status transitions, 0.15s active position highlight, 0.4s card deal (scale+fade), fold card slide-away, action button fade in/out
-- **Session Log** — in-memory hand history, drawer UI, clears on refresh
+- **Session Log** — in-memory hand history, summary screen, clears on refresh
 
 ### Preflop Spots
 | Spot | Position | Pot (bb) | User Invested | Description |
 |------|----------|----------|---------------|-------------|
 | Limp | IP only  | 15.5     | 7             | Opp limps MP, user raises to 7bb |
-| SRP  | IP/OOP   | 10.5     | 5             | User opens 5bb MP, BB calls |
+| SRP  | IP       | 10.5     | 5             | User opens 5bb MP, BB calls |
+| SRP  | OOP      | 11.5     | 5             | User opens 5bb CO, BTN calls |
 | 3BP  | IP       | 33.5     | 16            | Opp opens 4bb CO, user 3b 16bb BTN |
 | 3BP  | OOP      | 41       | 20            | Opp opens 4bb BTN, user 3b 20bb SB |
 | 4BP  | IP       | 89       | 44            | User opens 5bb BTN, opp 3b 20bb SB, user 4b 44bb |
@@ -96,10 +97,9 @@ CSS custom properties matching PreflopTrainer's visual style:
 ### Config Constraints
 - 4BP disabled when 100bb stack selected (and vice versa)
 - Limp locks position to IP
-- Default: IP, SRP, 200bb, $1/$3
+- Default: IP, SRP, 200bb, $2/$5
 
 ## Known Issues
 - **Driller**: Pot rounding — 10.5bb × $3 = $31.50 rounds to $32 (only affects SRP initial pot from 0.5bb dead SB)
-- **Driller**: Sidebar post-flop section shows only current street title — actions from all streets appear without grouping by street
 - **Dashboard**: Password hardcoded in source (not a real security measure)
 - **Dashboard**: Relies on third-party CORS proxies which may go down; fallback chain mitigates but doesn't eliminate risk
