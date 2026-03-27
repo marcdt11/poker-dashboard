@@ -897,9 +897,7 @@
         }
 
         .table-hole-card.empty {
-            background: transparent;
-            border: 2px dashed rgba(255,255,255,0.2);
-            box-shadow: none;
+            display: none;
         }
 
         .seat-pos-1 .seat-cards,
@@ -975,25 +973,56 @@
             .table-hole-card .suit {
                 font-size: 20px;
             }
-            .card.board-card {
-                width: 32px;
-                height: 44px;
-            }
-            .card.board-card .rank {
-                font-size: 18px;
-            }
-            .card.board-card .suit {
-                font-size: 14px;
-            }
-            .card.board-card.facedown {
-                width: 32px;
-                height: 44px;
+            .card {
+                width: 44px;
+                height: 62px;
             }
             .card .rank {
                 font-size: 22px;
             }
             .card .suit {
                 font-size: 17px;
+            }
+            .card.board-card {
+                width: 40px;
+                height: 56px;
+            }
+            .card.board-card .rank {
+                font-size: 20px;
+            }
+            .card.board-card .suit {
+                font-size: 15px;
+            }
+            .card.board-card.facedown {
+                width: 40px;
+                height: 56px;
+            }
+            /* Mobile: tuck all seat cards behind the circle */
+            .seat-cards {
+                left: 50% !important;
+                right: auto !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                gap: 2px;
+                z-index: 1;
+            }
+            .table-hole-card {
+                width: 24px;
+                height: 34px;
+            }
+            .table-hole-card .rank {
+                font-size: 0;
+            }
+            .table-hole-card .suit {
+                font-size: 0;
+            }
+            /* Fold animation: shrink into center and disappear */
+            @keyframes foldCardsMobile {
+                0%   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            }
+            .seat-cards.folding {
+                animation: foldCardsMobile 0.38s ease-in forwards !important;
             }
             .seat-pos-0 .seat-bet-pill { top: -38px; }
             .seat-pos-4 .seat-bet-pill { bottom: -38px; }
