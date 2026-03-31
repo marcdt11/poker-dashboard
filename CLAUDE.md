@@ -26,6 +26,11 @@
 7. You create Cursor prompts for each phase, asking Cursor to return a status report on what changes it makes in each phase so that you can catch mistakes
 8. I will pass on the phase prompts to Cursor and return the status reports
 
+## Session Start Protocol
+1. Read PROJECT.md for orientation
+2. Do not read source files whole — search or offset only
+3. Ask clarifying questions if scope is unclear before writing code
+
 **Documentation (MANDATORY — do not skip):**
 - **`PROJECT.md`** must stay in sync with the codebase. Update it **in the same commit** as the code change, not as a follow-up. Specifically update:
   - Folder structure when files are added/removed/renamed
