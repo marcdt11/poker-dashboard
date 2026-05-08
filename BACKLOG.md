@@ -68,6 +68,7 @@ _(none known)_
 - [x] Layer order hardening: desktop seat layers now follow explicit stack (table < cards < seat < text < active ring < HERO label)
 - [x] Mobile reference-emulation pass: rail-centered seats, centered side-seat text, and compact side hidden-card markers replacing bunny-ear styling
 - [x] Pot math + bet sizing audit: corrected 4BP_OOP pot (101 → 101.5bb), fixed SB seat-bet pill overcount on 'raises to' actions, aligned session-log pot rounding with in-game pot pill, villain postflop bets now round to $5 increments regardless of stakes (hero sizing remains free-form)
+- [x] Shot clock — optional per-decision countdown timer (Off/On + 5–300s seconds, default 30s/off, persisted to localStorage). Pill displays at top of felt above community cards, resets on each hero decision, stops at 0 and turns red. Reference only — never blocks input or auto-folds.
 
 ### Features (Future)
 - [ ] Street navigation controls (go back a street, re-deal turn/river cards)
@@ -77,7 +78,6 @@ _(none known)_
 - [ ] Hand export (copy to clipboard as text)
 - [ ] Voice/text notes per street for thought process recording
 - [ ] Quick-sizing buttons (1/3 pot, 1/2 pot, 2/3 pot, pot, overbet)
-- [ ] Shot clock — optional per-action countdown timer (e.g. 15s, 30s, 60s) to practice time pressure; visual only, does not auto-fold
 - [ ] Villain player types — assign profiles (e.g. tight/passive, loose/aggressive, calling station) that change opponent betting/calling behavior
 
 ### Bugs
