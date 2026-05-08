@@ -121,39 +121,6 @@
             flex-direction: column;
         }
 
-        .config-strip-summary {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            letter-spacing: 0.03em;
-        }
-
-        .config-strip-summary span {
-            font-family: var(--font-mono);
-        }
-
-        .config-toggle-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            cursor: pointer;
-            padding: 4px 8px;
-            transition: transform 0.2s;
-        }
-
-        .config-panel.collapsed .config-toggle-btn {
-            transform: rotate(-90deg);
-        }
-
-        .config-panel.collapsed .config-body {
-            display: none;
-        }
-
         .config-group {
             margin-bottom: 16px;
         }
@@ -342,6 +309,7 @@
             justify-content: center;
             gap: 2px;
             isolation: isolate;
+            transform: translate(-50%, -50%);
             transition: border-color 0.25s ease-in-out, opacity 0.25s ease-in-out, box-shadow 0.2s ease-in-out;
         }
 
@@ -466,10 +434,6 @@
         .seat-pos-6 .dealer-badge { top: 50%; left: -50px; right: auto; transform: translateY(-50%); }
         .seat-pos-7 .dealer-badge { top: -24px; left: -20px; right: auto; }
 
-        .seat {
-            transform: translate(-50%, -50%);
-        }
-
         .hero-hand { display: none; }
 
         .table-actions-area {
@@ -516,15 +480,6 @@
 
         .card.red { color: #d32f2f; }
         .card.black { color: #1a1a1a; }
-
-        .card.board-card {
-            width: 36px;
-            height: 50px;
-            font-size: 16px;
-        }
-
-        .card.board-card .rank { font-size: 16px; }
-        .card.board-card .suit { font-size: 16px; }
 
         @keyframes cardDeal {
             from { opacity: 0; transform: scale(0.5) translateY(-20px); }
@@ -604,11 +559,6 @@
         }
 
         /* ===== USER ACTIONS ===== */
-        @keyframes oppActionPulse {
-            0% { opacity: 0; transform: scale(0.95); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
         .action-buttons {
             display: flex;
             gap: 12px;
@@ -662,6 +612,11 @@
         .action-btn.all-in {
             background: var(--accent-red);
             color: #fff;
+        }
+
+        .action-btn-placeholder {
+            visibility: hidden;
+            pointer-events: none;
         }
 
         .sizing-area {
@@ -1178,9 +1133,6 @@
                 flex-direction: column;
                 flex: 1;
             }
-            .app:not(.play-mode) .config-strip-summary {
-                display: none !important;
-            }
             .app:not(.play-mode) .start-drilling-btn {
                 display: block;
                 margin-top: auto;
@@ -1346,10 +1298,6 @@
                 flex-direction: column;
                 gap: 12px;
             }
-            /* Hide collapsible strip on desktop — always show full config */
-            .config-strip-summary {
-                display: none !important;
-            }
             .config-body {
                 display: flex !important;
             }
@@ -1438,10 +1386,6 @@
             <!-- SIDEBAR: config + new hand button -->
             <div class="sidebar">
             <div class="config-panel" id="configPanel">
-                <div class="config-strip-summary" id="configStripSummary" style="display:none;">
-                    <span id="configSummaryText">IP · SRP · 200bb · $2/$5</span>
-                    <button class="config-toggle-btn" id="configToggleBtn">&#9660;</button>
-                </div>
                 <div class="config-body" id="configBody">
                     <div class="config-group">
                         <div class="config-label">Position</div>
@@ -1517,7 +1461,7 @@
                         <div class="table-actions-area" id="actionsArea">
                             <div class="action-buttons" id="actionButtons"></div>
                             <div class="sizing-area" id="sizingArea">
-                                <input type="text" inputmode="numeric" pattern="[0-9]*" class="sizing-input" id="sizingInput" placeholder="Bet size in $">
+                                <input type="number" inputmode="numeric" class="sizing-input" id="sizingInput" placeholder="Bet size in $" min="1" step="1">
                                 <span class="sizing-unit">$</span>
                                 <button class="sizing-confirm" id="sizingConfirm">Confirm</button>
                             </div>
@@ -1998,17 +1942,16 @@
                     game.seatStates[seat] = 'called';
                     actionLabel = 'limp';
                 }
-                // Show action + active ring in one step
-                await showSeatAction(seat, actionLabel, { mode: 'table', holdMs: 320, pauseMs: 0 });
-
-                // Place bet pill — 'calls' is an increment (added to existing bet); 'raises to'/'3-bets to'/'4-bets to'/'limps'/'bets' are totals
+                // Place bet pill first so it appears at the same moment as action text
+                // 'calls' is an increment; 'raises to'/'3-bets to'/'4-bets to'/'limps'/'bets' are totals
                 if (step.action === 'calls') {
                     game.seatBets[seat] = (game.seatBets[seat] || 0) + step.bb;
                 } else {
                     game.seatBets[seat] = step.bb;
                 }
-                renderTableSeats();
-                await delay(220);
+
+                // Show action + active ring with bet pill visible in the same render
+                await showSeatAction(seat, actionLabel, { mode: 'table', holdMs: 320, pauseMs: 220 });
             }
         }
 
@@ -2629,12 +2572,15 @@
 
         let html = '';
         if (facingBet) {
-            // Facing a bet/raise: call, fold, raise
+            // Facing a bet/raise: fold (left) -> call -> raise -> all-in (right)
             const callAmt = Math.min(facingBet.amount, game.userStack);
-            html += `<button class="action-btn call" onclick="handleUserAction('call')">Call ${fmtDollar(callAmt)}</button>`;
             html += `<button class="action-btn fold" onclick="handleUserAction('fold')">Fold</button>`;
+            html += `<button class="action-btn call" onclick="handleUserAction('call')">Call ${fmtDollar(callAmt)}</button>`;
             if (game.userStack > facingBet.amount) {
                 html += `<button class="action-btn raise" onclick="showSizing('raise', ${facingBet.amount})">Raise</button>`;
+            } else {
+                // Keep action slots stable when raise is unavailable (short stack)
+                html += `<button class="action-btn raise action-btn-placeholder" disabled aria-hidden="true" tabindex="-1"></button>`;
             }
             html += `<button class="action-btn all-in" onclick="handleUserAction('raise', ${game.userStack})">All In ${fmtDollar(game.userStack)}</button>`;
         } else {
@@ -2664,12 +2610,19 @@
         const maxDollars = bbToDollars(game.userStack);
 
         sizingInput.placeholder = `Min: $${minBetDollars}`;
-        sizingInput.min = minBetDollars;
-        sizingInput.step = 1;
+        sizingInput.min = String(minBetDollars);
+        sizingInput.max = String(maxDollars);
+        sizingInput.step = '1';
 
         document.getElementById('sizingConfirm').onclick = () => {
-            const dollarVal = parseInt(sizingInput.value);
-            if (isNaN(dollarVal) || dollarVal < minBetDollars) {
+            const dollarRaw = sizingInput.value.trim();
+            const dollarVal = Number(dollarRaw);
+            if (!Number.isFinite(dollarVal) || !Number.isInteger(dollarVal)) {
+                sizingError.textContent = 'Enter a whole dollar amount';
+                sizingError.classList.add('visible');
+                return;
+            }
+            if (dollarVal < minBetDollars) {
                 sizingError.textContent = `Minimum ${type} is $${minBetDollars}`;
                 sizingError.classList.add('visible');
                 return;
@@ -2779,7 +2732,6 @@
     function updateConfigSummaryText() {
         const stake = STAKES[config.stakes];
         const text = `${config.position} · ${config.spot} · ${config.stack}bb · ${stake.label}`;
-        document.getElementById('configSummaryText').textContent = text;
         const playModeSummary = document.getElementById('playModeSummary');
         if (playModeSummary) playModeSummary.textContent = text;
     }
