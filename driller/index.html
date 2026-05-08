@@ -833,14 +833,16 @@
         .shot-clock {
             font-family: var(--font-mono);
             font-weight: 600;
-            font-size: 12px;
+            font-size: 24px;
             color: rgba(255, 255, 255, 0.85);
             background: rgba(0, 0, 0, 0.45);
             border-radius: var(--radius-pill);
-            padding: 3px 10px;
+            padding: 6px 20px;
             letter-spacing: 0.05em;
             line-height: 1;
             display: none;
+            /* Extra gap between pill and community cards (parent flex gap is 10px). */
+            margin-bottom: 10px;
         }
         /* When enabled, pill always occupies layout space so cards don't shift; */
         /* visibility toggles based on whether it's actively counting. */
