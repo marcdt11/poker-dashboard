@@ -884,10 +884,13 @@
             border-radius: var(--radius-pill);
             padding: 3px 10px;
             letter-spacing: 0.05em;
-            display: none;
             line-height: 1;
+            display: none;
         }
-        .shot-clock.visible { display: inline-block; }
+        /* When enabled, pill always occupies layout space so cards don't shift; */
+        /* visibility toggles based on whether it's actively counting. */
+        .shot-clock.enabled { display: inline-block; visibility: hidden; }
+        .shot-clock.enabled.running { visibility: visible; }
         .shot-clock.expired { color: #ff5252; }
 
         .shotclock-row {
@@ -1772,7 +1775,7 @@
 
     // ===== SHOT CLOCK =====
     const SHOTCLOCK_STORAGE_KEY = 'driller_shotclock_v1';
-    let shotClockState = { intervalId: null, remaining: 0, expired: false };
+    let shotClockState = { intervalId: null, remaining: 0, expired: false, running: false };
 
     function loadShotClockConfig() {
         try {
@@ -1804,26 +1807,26 @@
     function renderShotClock() {
         const el = document.getElementById('shotClock');
         if (!el) return;
-        const active = shotClockState.intervalId !== null || shotClockState.expired;
-        if (!config.shotClock.enabled || !active) {
-            el.classList.remove('visible', 'expired');
-            return;
-        }
-        el.textContent = formatShotClock(shotClockState.remaining);
-        el.classList.add('visible');
+        const visible = shotClockState.running || shotClockState.expired;
+        el.classList.toggle('enabled', !!config.shotClock.enabled);
+        el.classList.toggle('running', visible);
         el.classList.toggle('expired', shotClockState.expired);
+        // Always set text so the pill has consistent dimensions even when hidden.
+        el.textContent = formatShotClock(visible ? shotClockState.remaining : config.shotClock.seconds);
     }
     function startShotClock() {
         stopShotClock();
         if (!config.shotClock.enabled) return;
         shotClockState.remaining = config.shotClock.seconds;
         shotClockState.expired = false;
+        shotClockState.running = true;
         renderShotClock();
         shotClockState.intervalId = setInterval(() => {
             shotClockState.remaining -= 1;
             if (shotClockState.remaining <= 0) {
                 shotClockState.remaining = 0;
                 shotClockState.expired = true;
+                shotClockState.running = false;
                 clearInterval(shotClockState.intervalId);
                 shotClockState.intervalId = null;
             }
@@ -1835,6 +1838,7 @@
             clearInterval(shotClockState.intervalId);
             shotClockState.intervalId = null;
         }
+        shotClockState.running = false;
         shotClockState.expired = false;
         shotClockState.remaining = 0;
         renderShotClock();
@@ -2990,7 +2994,7 @@
                 selectInGroup('shotClockOptions', btn.dataset.value);
                 applyShotClockEnabledUI();
                 saveShotClockConfig();
-                if (!config.shotClock.enabled) stopShotClock();
+                stopShotClock(); // resets state and re-renders pill (reserves/releases layout space)
             });
         });
 
@@ -3010,6 +3014,7 @@
         selectInGroup('shotClockOptions', config.shotClock.enabled ? 'on' : 'off');
         document.getElementById('shotClockSeconds').value = String(config.shotClock.seconds);
         applyShotClockEnabledUI();
+        renderShotClock();
     }
 
     // Init
