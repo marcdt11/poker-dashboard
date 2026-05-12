@@ -1093,6 +1093,12 @@
 
             throw new Error('All proxies failed: ' + errors.join('; '));
         }
+
+        // Kick off data fetch immediately, in parallel with password entry, so
+        // the dashboard is ready by the time the user submits the password.
+        const csvPromise = fetchWithFallback(SHEET_CSV_URL);
+        csvPromise.catch(() => {}); // suppress unhandled-rejection; init() awaits and surfaces the error
+
         const ROWS_PER_PAGE = 25;
 
         // State
@@ -1991,7 +1997,7 @@
         // Initialize
         async function init() {
             try {
-                const csv = await fetchWithFallback(SHEET_CSV_URL);
+                const csv = await csvPromise;
                 allSessions = parseCSV(csv);
 
                 if (allSessions.length === 0) {
