@@ -38,6 +38,7 @@ A collection of web-based poker tools hosted at `poker.marctorrence.com`. Curren
 - Published Google Sheet CSV fetched client-side
 - CORS proxy fallback chain (allorigins → corsproxy.io → api.codetabs.com) for reliable cross-origin fetching
 - Cache-busting query param appended to each request
+- Fetch kicks off on script load (parallel with the password gate) rather than after submit, so data is ready by the time the user enters the password — `csvPromise` is created at module scope and awaited inside `init()`
 
 ### Authentication
 - Simple password gate stored in `sessionStorage` (password hardcoded in source — not secure, just a casual gate)
