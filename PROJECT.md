@@ -47,7 +47,7 @@ A collection of web-based poker tools hosted at `poker.marctorrence.com`. Curren
 - **Cumulative Profit Chart** — Chart.js line chart with toggle between cumulative profit and hourly rate views
 - **Filters** — Multiselect dropdowns for location, stakes, game type + date range inputs. Dropdowns show only options available given other active filters. Select all/none controls.
 - **Session Table** — Paginated (25 rows), sortable, showing date, location, game, stakes, hours, buy-in, cash-out, profit
-- **Responsive** — Mobile-friendly layout
+- **Responsive** — Mobile-friendly layout; `text-size-adjust: 100%` on `body` prevents iOS Accessibility "Larger Text" from inflating text and overflowing the viewport (pinch-zoom still works)
 
 ### Design System
 - Dark GitHub-style theme (`--bg-primary: #0d1117`)
@@ -68,7 +68,7 @@ CSS custom properties matching PreflopTrainer's visual style:
 - Action buttons: red (raise/bet), green (call/check), gray (fold), 44px height, 10px radius
 - Pot pill: orange capsule, bet pills: white background with black text
 - Responsive table: horizontal stadium (2:1) on desktop, tighter vertical stadium (0.58:1) on mobile
-- Mobile optimizations: `100dvh` viewport with `env(safe-area-inset-bottom)` for iOS Safari, 58px seats with 12px labels, balanced rank/suit font sizing, numeric keypad bet input (`inputmode="numeric"`), zoom prevention via `maximum-scale=1.0`, tighter rail-centered seat inset, and compact side hidden-card markers (stacked mini backs) instead of top "bunny ears"
+- Mobile optimizations: `100dvh` viewport with `env(safe-area-inset-bottom)` for iOS Safari, 58px seats with 12px labels, balanced rank/suit font sizing, numeric keypad bet input (`inputmode="numeric"`), zoom prevention via `maximum-scale=1.0`, `text-size-adjust: 100%` to prevent iOS Accessibility "Larger Text" from inflating layout, tighter rail-centered seat inset, and compact side hidden-card markers (stacked mini backs) instead of top "bunny ears"
 - Fonts: Outfit (UI) + JetBrains Mono (numbers/data)
 - Loaded via Google Fonts CDN
 
