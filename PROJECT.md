@@ -47,7 +47,7 @@ A collection of web-based poker tools hosted at `poker.marctorrence.com`. Curren
 - **Cumulative Profit Chart** — Chart.js line chart with toggle between cumulative profit and hourly rate views
 - **Filters** — Multiselect dropdowns for location, stakes, game type + date range inputs. Dropdowns show only options available given other active filters. Select all/none controls.
 - **Session Table** — Paginated (25 rows), sortable, showing date, location, game, stakes, hours, buy-in, cash-out, profit
-- **Responsive** — Mobile-friendly layout; `text-size-adjust: 100%` on `body` prevents iOS Accessibility "Larger Text" from inflating text and overflowing the viewport (pinch-zoom still works)
+- **Responsive** — Mobile-friendly layout; viewport `maximum-scale=1.0` prevents iOS auto-zoom on input focus (e.g. tapping the password field) which would otherwise persist after the keyboard closes; `text-size-adjust: 100%` on `body` prevents iOS Accessibility "Larger Text" from inflating text and overflowing the viewport (user pinch-zoom still works on iOS 10+)
 
 ### Design System
 - Dark GitHub-style theme (`--bg-primary: #0d1117`)
